@@ -1,112 +1,95 @@
-#pragma warning(disable : 4996)
 #define WINVER 0x0502
 #include <iostream>
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
-
 using namespace std;
 
-#define BUFSIZE MAX_PATH
-#define FILESYSNAMEBUFSIZE MAX_PATH
-#define INFO_BUFFER_SIZE 32767
-#define MAX_KEY_LENGTH 255
+#define  BUFFER_SIZE 32767
+//2
+unsigned long flagf = 0;
+__int64 CounterStart = 0;
 
-//2.
-double LenFreq = 0.0;
-__int64 CountStart = 0;
-
-void StartCounter()
+void Starting()
 {
-    LARGE_INTEGER a;
-    if (!QueryPerformanceFrequency(&a))
+    LARGE_INTEGER t;
+
+
+    if (!QueryPerformanceFrequency(&t))
         cout << "Function QueryPerformanceFrequency() failed!\n";
+    flagf = long(t.QuadPart);
+    cout << "\nCPU frequency: " << flagf << " Hz\n";
+    QueryPerformanceCounter(&t);
+    CounterStart = t.QuadPart;
 
-    LenFreq = double(a.QuadPart);
 
-    printf("\n2.1.  CPU frequency: %u  Hz\n", a);
-    QueryPerformanceCounter(&a);
-    CountStart = a.QuadPart;
+    if (!QueryPerformanceCounter(&t)) 
+        cout << "Function QueryPerformanceCounter() failed!\n";
+    else 
+    {
+        double result = (1000000 * (t.QuadPart - CounterStart)) / flagf;
+        cout << "Number of cpu cycles: " << result << " us \n";
+    }
 }
 
 int main()
 {
-     // Пункт 1.1
-    OSVERSIONINFO opsys = {0};
-    opsys.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&opsys);
-    printf("1.1.  OS: Windows v%d.%d  (build %d)", opsys.dwMajorVersion, opsys.dwMinorVersion, opsys.dwBuildNumber);
-
-    // Пункт 1.2
-    TCHAR  Buf[INFO_BUFFER_SIZE];
-    DWORD  BChCnt = INFO_BUFFER_SIZE;
-    GetSystemDirectory(Buf, INFO_BUFFER_SIZE);
-    printf("\n1.2.  System directory: %s", Buf);
-
-    // Пункт 1.3
-    BChCnt = INFO_BUFFER_SIZE;
-    GetComputerName(Buf, &BChCnt);
-    printf("\n1.3.  Computer Name: %s", Buf);
-    GetUserName(Buf, &BChCnt);
-    printf("\n      User Name: %s", Buf);
-    // Пункт 1.4
-     char buff[MAX_PATH +1];
-    DWORD  CBufLen = MAX_PATH;
-    char name[MAX_PATH +1];
-    CHAR VolName[MAX_PATH];
-    __int64 total, available, free;
-
-    HANDLE search = FindFirstVolume(VolName, BUFSIZE);
-    printf("\n      %s", VolName);
-
+ // 1.1 
+    OSVERSIONINFO os_info = { 0 };
+    os_info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx(&os_info);
+    printf("Version OS: %i.%i\n", os_info.dwMajorVersion, os_info.dwMinorVersion)
+ // 1.2
+    TCHAR buffer[MAX_PATH];
+    GetSystemDirectory(buffer, BUFFER_SIZE);
+    printf("\nSystem Directory: %s \n", buffer);
+ // 1.3
+    DWORD leng = sizeof(buffer);
+    GetComputerName(buffer, &leng);
+    printf("\nName Computer: %s \n", buffer);
+    GetUserName(buffer, &leng);
+    printf("Name User: %s \n", buffer);
+ // 1.4 
+    TCHAR buf[MAX_PATH];
+    TCHAR name[MAX_PATH];
+    DWORD  BufferLength = MAX_PATH;
+    ULARGE_INTEGER free, volum;
+    HANDLE search = FindFirstVolume(buf, sizeof(buf));
     do {
-        printf("\n      %s", name);
-        GetVolumePathNamesForVolumeName(name, buffer, CBufLen, &CBufLen);
-        char* path = buff;
-        printf("\n      First path: %s", path);
-        GetDiskFreeSpaceEx(buff, (PULARGE_INTEGER)&available, (PULARGE_INTEGER)&total, (PULARGE_INTEGER)&free);
-        if (GetDiskFreeSpaceEx(buffer, (PULARGE_INTEGER)&available, (PULARGE_INTEGER)&total, (PULARGE_INTEGER)&free)==0) {
-            printf("\n      No information available.\n ");
+        GetVolumePathNamesForVolumeName(name, buf, BufferLength, &BufferLength);
+        printf("\n\n%s", name);
+        printf("\n%s", buf);
+        if (GetDiskFreeSpaceEx(name, &free, &volum, NULL) != 0) {
+            cout << "\nVolume: " << volum.QuadPart << "\nFree space: " << free.QuadPart;
         }
-        else{
-        printf("\n      Total size: %u  bytes ", total);
-        printf("\n      Free space: %u  bytes\n", available);
+        else {
+            printf("\nNo information.");
         }
-
-    } while (FindNextVolume(search, name, BUFSIZE));
+    } while (FindNextVolume(search, name, sizeof(buf)));
     FindVolumeClose(search);
-    // Пункт 1.5
-    DWORD dwSize;
-    TCHAR szName[MAX_KEY_LENGTH];
+// 1.5
     HKEY hKey;
-    DWORD dwIndex = 0;
-    DWORD retCode;
-    DWORD BufferSize = 8192;
-    PPERF_DATA_BLOCK PerfData = (PPERF_DATA_BLOCK)malloc(BufferSize);
-    DWORD cbData = BufferSize;
+    DWORD i = 0;
+    TCHAR vol_name[BUFFER_SIZE];
+    TCHAR data[BUFFER_SIZE];
+    TCHAR vol_name[BUFFER_SIZE];
+    DWORD size_vol_name;
+    DWORD size_data = BUFFER_SIZE;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-        0, KEY_ALL_ACCESS, &hKey) == !ERROR_SUCCESS)
-    {
-        printf("Function RegOpenKeyEx() failed!\n");
-    }
-    else printf("\n1.5.  Startup commands:\n");
-
-    while (1) {
-        dwSize = sizeof(szName);
-        retCode = RegEnumValue(hKey, dwIndex, szName, &dwSize, NULL, NULL, NULL, NULL);
-        if (retCode == ERROR_SUCCESS)
-        {
-            RegQueryValueEx(hKey, szName, NULL, NULL, (LPBYTE)PerfData, &cbData);
-            printf("      %d: %s:  %s\n", dwIndex + 1, szName, PerfData);
-            dwIndex++;
+    printf("\n\nList of commands:\n");
+    RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hKey);
+    do {
+        size_vol_name = sizeof(vol_name);
+        if (RegEnumValue(hKey, i, vol_name, &size_vol_name, NULL, REG_NONE, NULL, NULL) == ERROR_SUCCESS) {
+            RegQueryValueEx(hKey, vol_name, NULL, REG_NONE, (LPBYTE)data, &size_data);
+            printf("%i) %s:  %s\n", i + 1, vol_name, data);
+            i++;
         }
         else break;
-    }
-
+    } while (1);
     RegCloseKey(hKey);
 
-    StartCounter();
-    cout << "2.2.  CPU clock count: " << GetCounter()  << "  us \n";
+    Starting();
+
     return 0;
 }
