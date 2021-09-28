@@ -16,8 +16,8 @@ void Starting()
 
     QueryPerformanceCounter(&CounterStart);
     QueryPerformanceFrequency(&PerfFrequency);
-    cout << "\nPerformanceFrequency: " << PerfFrequency.QuadPart << " Hz\n";
     QueryPerformanceCounter(&CounterEnd);
+    cout << "\nPerformanceFrequency: " << PerfFrequency.QuadPart << " Hz\n";
     double result = (1000000.0 * (CounterEnd.QuadPart - CounterStart.QuadPart)) / PerfFrequency.QuadPart;
     cout << "Number of cpu cycles: " << result << " us \n";
 }
@@ -28,7 +28,7 @@ int main()
     OSVERSIONINFO os_info = { 0 };
     os_info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&os_info);
-    printf("\nVersion OS: %i.%i\n", os_info.dwMajorVersion, os_info.dwMinorVersion);
+    printf("Version OS: %i.%i\n", os_info.dwMajorVersion, os_info.dwMinorVersion);
  // 1.2
     TCHAR buffer[MAX_PATH];
     GetSystemDirectory(buffer, BUFFER_SIZE);
@@ -47,7 +47,7 @@ int main()
     HANDLE search = FindFirstVolume(buf, sizeof(buf));
     do {
         GetVolumePathNamesForVolumeName(name, buf, BufferLength, &BufferLength);
-        printf("\n%s", name);
+        printf("\n\n%s", name);
         printf("\n%s", buf);
         if (GetDiskFreeSpaceEx(name, &free, &volum, NULL) != 0) {
             cout << "\nVolume: " << volum.QuadPart << "\nFree space: " << free.QuadPart;
@@ -65,7 +65,7 @@ int main()
     DWORD size_vol_name;
     DWORD size_data = BUFFER_SIZE;
 
-    printf("\nList of commands:\n");
+    printf("\n\nList of commands:\n");
     RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hKey);
     do {
         size_vol_name = sizeof(vol_name);
