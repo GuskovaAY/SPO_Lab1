@@ -12,33 +12,23 @@ __int64 CounterStart = 0;
 
 void Starting()
 {
-    LARGE_INTEGER t;
+    LARGE_INTEGER CounterStart, PerfFrequency, CounterEnd;
 
-
-    QueryPerformanceCounter(&t);
-    CounterStart = t.QuadPart;
-    if (!QueryPerformanceFrequency(&t))
-        cout << "Function QueryPerformanceFrequency() failed!\n";
-    flagf = long(t.QuadPart);
-    cout << "\nCPU frequency: " << flagf << " Hz\n";
-
-
-    if (!QueryPerformanceCounter(&t)) 
-        cout << "Function QueryPerformanceCounter() failed!\n";
-    else 
-    {
-        double result = (1000000 * (t.QuadPart - CounterStart)) / flagf;
-        cout << "Number of cpu cycles: " << result << " us \n";
-    }
+    QueryPerformanceCounter(&CounterStart);
+    QueryPerformanceFrequency(&PerfFrequency);
+    cout << "\nPerformanceFrequency: " << PerfFrequency.QuadPart << " Hz\n";
+    QueryPerformanceCounter(&CounterEnd);
+    double result = (1000000.0 * (CounterEnd.QuadPart - CounterStart.QuadPart)) / PerfFrequency.QuadPart;
+    cout << "Number of cpu cycles: " << result << " us \n";
 }
 
 int main()
 {
- // 1.1 
+ // 1.1
     OSVERSIONINFO os_info = { 0 };
     os_info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&os_info);
-    printf("Version OS: %i.%i\n", os_info.dwMajorVersion, os_info.dwMinorVersion)
+    printf("\nVersion OS: %i.%i\n", os_info.dwMajorVersion, os_info.dwMinorVersion);
  // 1.2
     TCHAR buffer[MAX_PATH];
     GetSystemDirectory(buffer, BUFFER_SIZE);
@@ -49,7 +39,7 @@ int main()
     printf("\nName Computer: %s \n", buffer);
     GetUserName(buffer, &leng);
     printf("Name User: %s \n", buffer);
- // 1.4 
+ // 1.4
     TCHAR buf[MAX_PATH];
     TCHAR name[MAX_PATH];
     DWORD  BufferLength = MAX_PATH;
@@ -57,7 +47,7 @@ int main()
     HANDLE search = FindFirstVolume(buf, sizeof(buf));
     do {
         GetVolumePathNamesForVolumeName(name, buf, BufferLength, &BufferLength);
-        printf("\n\n%s", name);
+        printf("\n%s", name);
         printf("\n%s", buf);
         if (GetDiskFreeSpaceEx(name, &free, &volum, NULL) != 0) {
             cout << "\nVolume: " << volum.QuadPart << "\nFree space: " << free.QuadPart;
@@ -70,13 +60,12 @@ int main()
 // 1.5
     HKEY hKey;
     DWORD i = 0;
-    TCHAR vol_name[BUFFER_SIZE];
     TCHAR data[BUFFER_SIZE];
     TCHAR vol_name[BUFFER_SIZE];
     DWORD size_vol_name;
     DWORD size_data = BUFFER_SIZE;
 
-    printf("\n\nList of commands:\n");
+    printf("\nList of commands:\n");
     RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_ALL_ACCESS, &hKey);
     do {
         size_vol_name = sizeof(vol_name);
