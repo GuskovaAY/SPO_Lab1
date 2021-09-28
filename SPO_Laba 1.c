@@ -15,12 +15,12 @@ void Starting()
     LARGE_INTEGER t;
 
 
+    QueryPerformanceCounter(&t);
+    CounterStart = t.QuadPart;
     if (!QueryPerformanceFrequency(&t))
         cout << "Function QueryPerformanceFrequency() failed!\n";
     flagf = long(t.QuadPart);
     cout << "\nCPU frequency: " << flagf << " Hz\n";
-    QueryPerformanceCounter(&t);
-    CounterStart = t.QuadPart;
 
 
     if (!QueryPerformanceCounter(&t)) 
